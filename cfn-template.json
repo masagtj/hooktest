@@ -1,0 +1,862 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "pcc project template.",
+  "Parameters": {
+    "InstanceType": {
+      "Description": "WebServer EC2 instance type",
+      "Type": "String",
+      "Default": "t2.small",
+      "AllowedValues": [
+        "t1.micro",
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large",
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "c1.medium",
+        "c1.xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "hi1.4xlarge",
+        "hs1.8xlarge",
+        "cr1.8xlarge",
+        "cc2.8xlarge",
+        "cg1.4xlarge"
+      ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+    "KeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+    },
+    "DBName": {
+      "Default": "pccdb",
+      "Description": "The Drupal database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
+    },
+    "DBUsername": {
+      "Default": "bdd_admin",
+      "NoEcho": "true",
+      "Description": "The Drupal database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9_]*",
+      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
+    },
+    "DBPassword": {
+      "Default": "bdd+2016",
+      "NoEcho": "true",
+      "Description": "The Drupal database admin account password",
+      "Type": "String",
+      "MinLength": "8",
+      "MaxLength": "41",
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9+-/:-@\\[-\\`\\{-\\~]*",
+      "ConstraintDescription": "must contain only alphanumeric characters."
+    },
+    "DBClass": {
+      "Default": "db.t2.micro",
+      "Description": "Database instance class",
+      "Type": "String",
+      "AllowedValues": [
+        "db.t2.micro",
+        "db.m3.xlarge"
+      ],
+      "ConstraintDescription": "must select a valid database instance type."
+    },
+    "DBAllocatedStorage": {
+      "Default": "10",
+      "Description": "The size of the database (Gb)",
+      "Type": "Number",
+      "MinValue": "10",
+      "MaxValue": "1024",
+      "ConstraintDescription": "must be between 5 and 1024Gb."
+    }
+  },
+  "Mappings": {
+    "AWSInstanceType2Arch": {
+      "t1.micro": {
+        "Arch": "PV64"
+      },
+      "t2.nano": {
+        "Arch": "HVM64"
+      },
+      "t2.micro": {
+        "Arch": "HVM64"
+      },
+      "t2.small": {
+        "Arch": "HVM64"
+      },
+      "t2.medium": {
+        "Arch": "HVM64"
+      },
+      "t2.large": {
+        "Arch": "HVM64"
+      },
+      "m1.small": {
+        "Arch": "PV64"
+      },
+      "m1.medium": {
+        "Arch": "PV64"
+      },
+      "m1.large": {
+        "Arch": "PV64"
+      },
+      "m1.xlarge": {
+        "Arch": "PV64"
+      },
+      "m2.xlarge": {
+        "Arch": "PV64"
+      },
+      "m2.2xlarge": {
+        "Arch": "PV64"
+      },
+      "m2.4xlarge": {
+        "Arch": "PV64"
+      },
+      "m3.medium": {
+        "Arch": "HVM64"
+      },
+      "m3.large": {
+        "Arch": "HVM64"
+      },
+      "m3.xlarge": {
+        "Arch": "HVM64"
+      },
+      "m3.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "m4.large": {
+        "Arch": "HVM64"
+      },
+      "m4.xlarge": {
+        "Arch": "HVM64"
+      },
+      "m4.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "m4.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "m4.10xlarge": {
+        "Arch": "HVM64"
+      },
+      "c1.medium": {
+        "Arch": "PV64"
+      },
+      "c1.xlarge": {
+        "Arch": "PV64"
+      },
+      "c3.large": {
+        "Arch": "HVM64"
+      },
+      "c3.xlarge": {
+        "Arch": "HVM64"
+      },
+      "c3.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "c3.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "c3.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "c4.large": {
+        "Arch": "HVM64"
+      },
+      "c4.xlarge": {
+        "Arch": "HVM64"
+      },
+      "c4.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "c4.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "c4.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "g2.2xlarge": {
+        "Arch": "HVMG2"
+      },
+      "g2.8xlarge": {
+        "Arch": "HVMG2"
+      },
+      "r3.large": {
+        "Arch": "HVM64"
+      },
+      "r3.xlarge": {
+        "Arch": "HVM64"
+      },
+      "r3.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "r3.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "r3.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "d2.xlarge": {
+        "Arch": "HVM64"
+      },
+      "d2.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "d2.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "d2.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "hi1.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "hs1.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "cr1.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "cc2.8xlarge": {
+        "Arch": "HVM64"
+      }
+    },
+    "AWSInstanceType2NATArch": {
+      "t1.micro": {
+        "Arch": "NATPV64"
+      },
+      "t2.nano": {
+        "Arch": "NATHVM64"
+      },
+      "t2.micro": {
+        "Arch": "NATHVM64"
+      },
+      "t2.small": {
+        "Arch": "NATHVM64"
+      },
+      "t2.medium": {
+        "Arch": "NATHVM64"
+      },
+      "t2.large": {
+        "Arch": "NATHVM64"
+      },
+      "m1.small": {
+        "Arch": "NATPV64"
+      },
+      "m1.medium": {
+        "Arch": "NATPV64"
+      },
+      "m1.large": {
+        "Arch": "NATPV64"
+      },
+      "m1.xlarge": {
+        "Arch": "NATPV64"
+      },
+      "m2.xlarge": {
+        "Arch": "NATPV64"
+      },
+      "m2.2xlarge": {
+        "Arch": "NATPV64"
+      },
+      "m2.4xlarge": {
+        "Arch": "NATPV64"
+      },
+      "m3.medium": {
+        "Arch": "NATHVM64"
+      },
+      "m3.large": {
+        "Arch": "NATHVM64"
+      },
+      "m3.xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "m3.2xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "m4.large": {
+        "Arch": "NATHVM64"
+      },
+      "m4.xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "m4.2xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "m4.4xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "m4.10xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c1.medium": {
+        "Arch": "NATPV64"
+      },
+      "c1.xlarge": {
+        "Arch": "NATPV64"
+      },
+      "c3.large": {
+        "Arch": "NATHVM64"
+      },
+      "c3.xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c3.2xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c3.4xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c3.8xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c4.large": {
+        "Arch": "NATHVM64"
+      },
+      "c4.xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c4.2xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c4.4xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "c4.8xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "g2.2xlarge": {
+        "Arch": "NATHVMG2"
+      },
+      "g2.8xlarge": {
+        "Arch": "NATHVMG2"
+      },
+      "r3.large": {
+        "Arch": "NATHVM64"
+      },
+      "r3.xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "r3.2xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "r3.4xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "r3.8xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "i2.xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "i2.2xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "i2.4xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "i2.8xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "d2.xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "d2.2xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "d2.4xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "d2.8xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "hi1.4xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "hs1.8xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "cr1.8xlarge": {
+        "Arch": "NATHVM64"
+      },
+      "cc2.8xlarge": {
+        "Arch": "NATHVM64"
+      }
+    },
+    "AWSRegionArch2AMI": {
+      "us-east-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "us-west-2": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "us-west-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "eu-west-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "eu-central-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "ap-northeast-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "ami-9bf736fa",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "ap-northeast-2": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "ap-southeast-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "ap-southeast-2": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "sa-east-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      },
+      "cn-north-1": {
+        "PV64": "NOT_SUPPORTED",
+        "HVM64": "NOT_SUPPORTED",
+        "HVMG2": "NOT_SUPPORTED"
+      }
+    }
+  },
+  "Resources": {
+    "pccWebAPI": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "InstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "SecurityGroupIds": [
+          {
+            "Ref": "pccInstanceSG"
+          }
+        ],
+        "SubnetId": "subnet-8b75dad2",
+        "IamInstanceProfile":"bdd_default_ec2_role",
+        "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+                    "#! /bin/bash -v\n",
+                    "/home/bdd-dev/phvdatalinkage-1.0-SNAPSHOT/bin/phvdatalinkage &\n"
+                ]]
+            }
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "336c1245-44da-4e24-9163-0bfca2915d46"
+        }
+      }
+    },
+    "pccInstanceSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable SSH access",
+        "VpcId": "vpc-b79728d2",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "SourceSecurityGroupId": "sg-7ec4871a"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "9000",
+            "ToPort": "9000",
+            "SourceSecurityGroupId": {
+              "Ref": "pccWebApiSG"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "997510c0-5f6c-4f80-bacf-23241a0d7a6b"
+        }
+      },
+      "DependsOn": [
+        "pccWebApiSG"
+      ]
+    },
+    "pccWebApiELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Instances": [
+          {
+            "Ref": "pccWebAPI"
+          }
+        ],
+        "Subnets": [
+          "subnet-8b75dad2"
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "pccWebApiSG"
+          }
+        ],
+        "Listeners": [
+          {
+            "LoadBalancerPort": "80",
+            "InstancePort": "9000",
+            "Protocol": "HTTP"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "099c94c6-2401-40f0-8849-afc0ff6cc0be"
+        }
+      }
+    },
+    "pccWebApiSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable Web access",
+        "VpcId": "vpc-b79728d2",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "312333f7-dc81-4996-a06f-541551d02067"
+        }
+      }
+    },
+    "pccRDS": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "Engine": "postgres",
+        "EngineVersion": "9.5.2",
+        "DBName": {
+          "Ref": "DBName"
+        },
+        "DBInstanceClass": {
+          "Ref": "DBClass"
+        },
+        "VPCSecurityGroups": [
+          {
+            "Ref": "pccRDSSG"
+          }
+        ],
+        "AllocatedStorage": {
+          "Ref": "DBAllocatedStorage"
+        },
+        "MasterUsername": {
+          "Ref": "DBUsername"
+        },
+        "MasterUserPassword": {
+          "Ref": "DBPassword"
+        },
+        "DBSubnetGroupName": {
+          "Ref": "pccRDSSubnet"
+        },
+        "DBParameterGroupName" :"pccpsql",
+        "PubliclyAccessible" : "true"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "422d0531-93a9-49a1-8671-00a3a66c8a46"
+        }
+      }
+    },
+    "pccRDSSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Frontend Access",
+        "VpcId": "vpc-b79728d2",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "5432",
+            "ToPort": "5432",
+            "SourceSecurityGroupId": {
+              "Ref": "pccInstanceSG"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "e5f01ad0-df24-4faa-b726-82bc4920ab8a"
+        }
+      }
+    },
+    "pccRDSSubnet": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription" : "cfn-pcc rds-subnet",
+        "SubnetIds" : [ "subnet-4675e131","subnet-8b75dad2" ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "ee32593d-f8c8-4c86-a639-c6e9ccbfd815"
+        }
+      }
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "997510c0-5f6c-4f80-bacf-23241a0d7a6b": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 280,
+          "y": 40
+        },
+        "z": 1,
+        "embeds": [],
+        "dependson": [
+          "312333f7-dc81-4996-a06f-541551d02067"
+        ],
+        "isrelatedto": [
+          "312333f7-dc81-4996-a06f-541551d02067"
+        ]
+      },
+      "336c1245-44da-4e24-9163-0bfca2915d46": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 280,
+          "y": 170
+        },
+        "z": 1,
+        "embeds": [],
+        "ismemberof": [
+          "997510c0-5f6c-4f80-bacf-23241a0d7a6b"
+        ],
+        "isrelatedto": [
+          "33a1d4e7-efe1-4e9d-9a89-6dd2c9055a4e"
+        ]
+      },
+      "099c94c6-2401-40f0-8849-afc0ff6cc0be": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 390,
+          "y": 170
+        },
+        "z": 1,
+        "embeds": [],
+        "isconnectedto": [
+          "336c1245-44da-4e24-9163-0bfca2915d46"
+        ],
+        "ismemberof": [
+          "312333f7-dc81-4996-a06f-541551d02067"
+        ]
+      },
+      "921d2bc9-fa6b-47cb-ae4f-425dae43ff00": {
+        "source": {
+          "id": "099c94c6-2401-40f0-8849-afc0ff6cc0be"
+        },
+        "target": {
+          "id": "997510c0-5f6c-4f80-bacf-23241a0d7a6b"
+        },
+        "z": 2
+      },
+      "1575f587-1a06-46f0-b2d6-4e88f961c289": {
+        "source": {
+          "id": "099c94c6-2401-40f0-8849-afc0ff6cc0be"
+        },
+        "target": {
+          "id": "336c1245-44da-4e24-9163-0bfca2915d46"
+        },
+        "z": 3
+      },
+      "312333f7-dc81-4996-a06f-541551d02067": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 390,
+          "y": 40
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "1132a906-f31b-4744-a987-9c65522cc2c0": {
+        "source": {
+          "id": "336c1245-44da-4e24-9163-0bfca2915d46"
+        },
+        "target": {
+          "id": "997510c0-5f6c-4f80-bacf-23241a0d7a6b"
+        },
+        "z": 2
+      },
+      "fa7cb832-5c61-49a6-9b54-9a104a5fa91c": {
+        "source": {
+          "id": "099c94c6-2401-40f0-8849-afc0ff6cc0be"
+        },
+        "target": {
+          "id": "312333f7-dc81-4996-a06f-541551d02067"
+        },
+        "z": 3
+      },
+      "440cf430-4968-4015-aa21-c405a792f795": {
+        "source": {
+          "id": "997510c0-5f6c-4f80-bacf-23241a0d7a6b"
+        },
+        "target": {
+          "id": "312333f7-dc81-4996-a06f-541551d02067"
+        },
+        "z": 2
+      },
+      "e5f01ad0-df24-4faa-b726-82bc4920ab8a": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 100,
+          "y": 40
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "312333f7-dc81-4996-a06f-541551d02067",
+          "997510c0-5f6c-4f80-bacf-23241a0d7a6b"
+        ]
+      },
+      "422d0531-93a9-49a1-8671-00a3a66c8a46": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 70,
+          "y": 170
+        },
+        "z": 1,
+        "parent": "ee32593d-f8c8-4c86-a639-c6e9ccbfd815",
+        "embeds": [],
+        "ismemberof": [
+          "e5f01ad0-df24-4faa-b726-82bc4920ab8a"
+        ]
+      },
+      "ee32593d-f8c8-4c86-a639-c6e9ccbfd815": {
+        "size": {
+          "width": 140,
+          "height": 140
+        },
+        "position": {
+          "x": 18.62160572252021,
+          "y": 132.78737553532997
+        },
+        "z": 0,
+        "embeds": [
+          "422d0531-93a9-49a1-8671-00a3a66c8a46"
+        ]
+      }
+    }
+  }
+}
